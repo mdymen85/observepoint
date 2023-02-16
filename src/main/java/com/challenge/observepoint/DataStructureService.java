@@ -45,7 +45,7 @@ public class DataStructureService {
     }
 
 
-    private static void orderTop100Desc() {
+    private void orderTop100Desc() {
         top100Map.entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
