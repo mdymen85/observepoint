@@ -23,7 +23,7 @@ class ObservepointApplicationTests {
 
 	@Test
 	void simpleIp() {
-		var ip = "123.132.244.256";
+		var ip = "123.132.244.255";
 		dataStructureService.requestHandled(ip);
 		assertEquals(dataStructureService.getIpsMap().get(ip), 1);
 	}
@@ -73,14 +73,12 @@ class ObservepointApplicationTests {
 
 		Thread.sleep(10000);
 
-		long init = System.currentTimeMillis();
-
-		System.out.println(init);
 		Map<String, Integer> map = this.dataStructureService.top100();
-		System.out.println(System.currentTimeMillis() - init);
-
-
-		int i = 0;
+		assertEquals(map.get("123.123.123.123"), 30);
+		assertEquals(map.get("123.123.123.124"), 21);
+		assertEquals(map.get("123.123.123.122"), 20);
+		assertEquals(map.get("123.123.123.125"), 11);
+		assertEquals(map.get("123.123.123.121"), 10);
 
 	}
 

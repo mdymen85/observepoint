@@ -23,10 +23,12 @@ public class DataStructureService {
     private static final int INCREASE = 1;
     private static final String IPV4_PATTERN = "(\\b25[0-5]|\\b2[0-4][0-9]|\\b[01]?[0-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}";
 
+    //for test porpouse
     public Map<String, Integer> getIpsMap() {
         return this.ipsMap;
     }
 
+    //for test porpouse
     public void reset() {
         ipsMap = new ConcurrentHashMap<>();
         top100Map = new ConcurrentHashMap<>();
@@ -38,7 +40,7 @@ public class DataStructureService {
         top100SortedMap.clear();
         orderTop100Desc();
         stopwatch.stop();
-        System.out.println("Total top100: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+        log.info("Total top100: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
         return top100SortedMap;
     }
 
@@ -79,7 +81,7 @@ public class DataStructureService {
 
     private boolean validateIp(final String ip) {
         if (Strings.isBlank(ip) || !ip.matches(IPV4_PATTERN)) {
-            System.err.printf("IP [%s] is not valid.%n", ip);
+            log.error("IP {} is not valid.", ip);
             return true;
         }
         return false;
