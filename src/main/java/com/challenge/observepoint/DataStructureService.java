@@ -1,12 +1,15 @@
 package com.challenge.observepoint;
 
+import com.google.common.base.Stopwatch;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -31,12 +34,20 @@ public class DataStructureService {
     }
 
     public Map<String, Integer> top100() {
+        Stopwatch stopwatch = Stopwatch.createStarted();
         top100SortedMap.clear();
+        orderTop100Desc();
+        stopwatch.stop();
+        System.out.println("Total top100: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+        return top100SortedMap;
+    }
+
+
+    private static void orderTop100Desc() {
         top100Map.entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                 .forEachOrdered(x -> top100SortedMap.put(x.getKey(), x.getValue()));
-        return top100SortedMap;
     }
 
     public void clear(){
@@ -76,21 +87,22 @@ public class DataStructureService {
 
 
     /**
+     * Start the top 100 registration in asyncronous way.
      *
      * @param ip
      * @param updatedValue
      */
     private void processTop100(final String ip, final int updatedValue) {
-        var thread = new Thread(() -> process(ip, updatedValue));
-        thread.start();
+        CompletableFuture.runAsync(() -> process(ip, updatedValue));
     }
 
     /**
+     * If the map has more than 100 elements,
      *
      * @param ip
      * @param updatedValue
      */
-    private void process(String ip, int updatedValue) {
+    private void process(final String ip, final int updatedValue) {
         if (top100Map.size() >= 100) {
             updateCompleteTop100(ip, updatedValue);
         } else {
@@ -100,6 +112,7 @@ public class DataStructureService {
 
     private void updateCompleteTop100(final String ip, final int updatedValue) {
         if (ipExists(ip, updatedValue)) return;
+        orderTop100Desc();
         for (Map.Entry<String, Integer> entry : top100Map.entrySet()) {
             if (entry.getValue() < updatedValue) {
                 top100Map.replace(ip, updatedValue);
@@ -107,7 +120,7 @@ public class DataStructureService {
         }
     }
 
-    private boolean ipExists(String ip, int updatedValue) {
+    private boolean ipExists(final String ip, final int updatedValue) {
         if (top100Map.containsKey(ip)) {
             top100Map.put(ip, updatedValue);
             return true;

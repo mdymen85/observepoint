@@ -73,8 +73,11 @@ class ObservepointApplicationTests {
 
 		Thread.sleep(10000);
 
-		Map<String, Integer> map = this.dataStructureService.top100();
+		long init = System.currentTimeMillis();
 
+		System.out.println(init);
+		Map<String, Integer> map = this.dataStructureService.top100();
+		System.out.println(System.currentTimeMillis() - init);
 
 
 		int i = 0;
