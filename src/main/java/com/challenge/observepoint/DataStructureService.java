@@ -18,17 +18,20 @@ public class DataStructureService {
 
     private static ConcurrentHashMap<String, Integer> ipsMap = new ConcurrentHashMap<>();
     private static ConcurrentHashMap<String, Integer> top100Map = new ConcurrentHashMap<>();
+
+    //copy of top100Map that is going to be ordered in runtime, because ConcurrentHashMap does not allow sort.
     private static LinkedHashMap<String, Integer> top100SortedMap = new LinkedHashMap<>();
+
+    //auxiliar map that is going to be ordered in runtime, in order to update the map.
+    private LinkedHashMap<String, Integer> currentTop100Map = new LinkedHashMap<>();
 
     private static final int INCREASE = 1;
     private static final String IPV4_PATTERN = "(\\b25[0-5]|\\b2[0-4][0-9]|\\b[01]?[0-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}";
 
-    //for test porpouse
     public Map<String, Integer> getIpsMap() {
         return this.ipsMap;
     }
 
-    //for test porpouse
     public void reset() {
         ipsMap = new ConcurrentHashMap<>();
         top100Map = new ConcurrentHashMap<>();
@@ -40,7 +43,7 @@ public class DataStructureService {
         top100SortedMap.clear();
         orderTop100Desc();
         stopwatch.stop();
-        log.info("Total top100: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+        System.out.println("Total top100: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
         return top100SortedMap;
     }
 
@@ -52,7 +55,7 @@ public class DataStructureService {
                 .forEachOrdered(x -> top100SortedMap.put(x.getKey(), x.getValue()));
     }
 
-    public void clear(){
+    public void clear() {
         ipsMap.clear();
         top100Map.clear();
         top100SortedMap.clear();
@@ -60,9 +63,10 @@ public class DataStructureService {
 
     /**
      * Will ignore ip in a wrong format.
-     *
+     * <p>
      * If an IP exists, will merge that IP in the map
      * or if dont exists will add it.
+     *
      * @param ip
      */
     public void requestHandled(final String ip) {
@@ -81,7 +85,7 @@ public class DataStructureService {
 
     private boolean validateIp(final String ip) {
         if (Strings.isBlank(ip) || !ip.matches(IPV4_PATTERN)) {
-            log.error("IP {} is not valid.", ip);
+            System.err.printf("IP [%s] is not valid.%n", ip);
             return true;
         }
         return false;
@@ -112,14 +116,35 @@ public class DataStructureService {
         }
     }
 
+    /**
+     * 1 - if an ip already exists, will update count.
+     * 2 - new in concurrentTop100Map
+     * 3 - do a sorted copy top100Map to currentTopMap100
+     * 4 - iterate the sorted copy in order to verify if each value is
+     * lower than updatedValue. If yes, will remove the value and add
+     * a new ip with their count.
+     *
+     * @param ip
+     * @param updatedValue
+     */
     private void updateCompleteTop100(final String ip, final int updatedValue) {
         if (ipExists(ip, updatedValue)) return;
-        orderTop100Desc();
-        for (Map.Entry<String, Integer> entry : top100Map.entrySet()) {
-            if (entry.getValue() < updatedValue) {
-                top100Map.replace(ip, updatedValue);
+        currentTop100Map = new LinkedHashMap<>();
+        sortCurrentTop100Map();
+        for (Map.Entry<String, Integer> entry : currentTop100Map.entrySet()) {
+            if (updatedValue > entry.getValue()) {
+                top100Map.remove(entry.getKey());
+                top100Map.put(ip, updatedValue);
+                return;
             }
         }
+    }
+
+    private void sortCurrentTop100Map() {
+        top100Map.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .forEachOrdered(x -> currentTop100Map.put(x.getKey(), x.getValue()));
     }
 
     private boolean ipExists(final String ip, final int updatedValue) {
@@ -129,4 +154,5 @@ public class DataStructureService {
         }
         return false;
     }
+
 }
