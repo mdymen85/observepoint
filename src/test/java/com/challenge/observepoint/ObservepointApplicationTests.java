@@ -20,7 +20,7 @@ class ObservepointApplicationTests {
 
 	@BeforeEach
 	public void before() {
-		dataStructureService.reset();
+		dataStructureService.clear();
 	}
 
 	@Test
@@ -184,7 +184,6 @@ class ObservepointApplicationTests {
 
 
 		final Map<String, Integer> top100Map = this.dataStructureService.top100();
-		System.out.println(top100Map);
 		assertEquals(100, top100Map.size());
 	}
 

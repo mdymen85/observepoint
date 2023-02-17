@@ -27,15 +27,10 @@ public class DataStructureService {
 
     private static final int INCREASE = 1;
     private static final String IPV4_PATTERN = "(\\b25[0-5]|\\b2[0-4][0-9]|\\b[01]?[0-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}";
+    private static final int TOP_100 = 100;
 
     public Map<String, Integer> getIpsMap() {
         return this.ipsMap;
-    }
-
-    public void reset() {
-        ipsMap = new ConcurrentHashMap<>();
-        top100Map = new ConcurrentHashMap<>();
-        top100SortedMap = new LinkedHashMap<>();
     }
 
     public Map<String, Integer> top100() {
@@ -43,7 +38,7 @@ public class DataStructureService {
         top100SortedMap.clear();
         orderTop100Desc();
         stopwatch.stop();
-        System.out.println("Total top100: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+        log.info("Total top100: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
         return top100SortedMap;
     }
 
@@ -85,7 +80,7 @@ public class DataStructureService {
 
     private boolean validateIp(final String ip) {
         if (Strings.isBlank(ip) || !ip.matches(IPV4_PATTERN)) {
-            System.err.printf("IP [%s] is not valid.%n", ip);
+            log.error("IP {} is not valid.", ip);
             return true;
         }
         return false;
@@ -109,7 +104,7 @@ public class DataStructureService {
      * @param updatedValue
      */
     private void process(final String ip, final int updatedValue) {
-        if (top100Map.size() >= 100) {
+        if (top100Map.size() >= TOP_100) {
             updateCompleteTop100(ip, updatedValue);
         } else {
             top100Map.put(ip, updatedValue);
@@ -129,7 +124,6 @@ public class DataStructureService {
      */
     private void updateCompleteTop100(final String ip, final int updatedValue) {
         if (ipExists(ip, updatedValue)) return;
-        currentTop100Map = new LinkedHashMap<>();
         sortCurrentTop100Map();
         for (Map.Entry<String, Integer> entry : currentTop100Map.entrySet()) {
             if (updatedValue > entry.getValue()) {
@@ -141,6 +135,7 @@ public class DataStructureService {
     }
 
     private void sortCurrentTop100Map() {
+        currentTop100Map = new LinkedHashMap<>();
         top100Map.entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
