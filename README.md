@@ -10,7 +10,8 @@ After adding/merging a new IP on the map, also this IP will be added in a new ma
 ## What is the runtime complexity of each function?
 
 requestHandled(...)  -> O(1) 
-top100() -> O(n) -> n = 100
+
+top100() -> O(Map.Entry.comparingByValue(Comparator.reverseOrder())) -> n = 100
 
 ## What other approaches did you decide not to pursue?
 Need to use concurrentHashMap in order to avoid concurrency problems, so i decided not to use a Map that wont have lock control.
